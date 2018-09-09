@@ -1,0 +1,6 @@
+1 1 18.5 98.0 70.0 136.0 circle circle
+2 1 124.0 219.0 67.5 131.5 triangle triangle
+3 1 30.5 114.0 167.0 241.0 rectangle rectangle
+4 1 147.0 209.0 169.0 254.0 square square
+5 2 37.0 161.0 52.0 151.5 triangle mark
+6 2 98.0 192.0 168.0 243.0 circle circle
