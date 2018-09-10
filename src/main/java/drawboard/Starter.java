@@ -75,7 +75,13 @@ public class Starter extends Application {
     private Label typeString;
     private TextField markString;
 
+    //保存
+    private Button saveMark;
 
+
+    //画布
+    private Canvas canvas;
+    private GraphicsContext graphicsContext;
 
 
     /**
@@ -102,61 +108,65 @@ public class Starter extends Application {
 
         typeString.setText("");
         markString.setText("");
-        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
+        saveMark.setDisable(true);
+        graphicsContext = canvas.getGraphicsContext2D();
         graphicsContext.setFill(Color.GRAY);
         graphicsContext.fillRect(0, 0, canvas.getWidth(), canvas.getHeight());
     }
 
     /**
      * @author:pis
-     * @description: 重载application的start方法
-     * @date: 11:59 2018/9/6
+     * @description: 初始化choiceBox组件
+     * @date: 20:07 2018/9/10
      */
-    @Override
-    public void start(Stage primaryStage) {
-        picture = new PictureEntity();
-        picture.setId(pictureService.findLastID(DefaultContext.PICTUREPATH) + 1);
-        primaryStage.setTitle(DefaultContext.SKETCHPAD);
+    private ChoiceBox<String> initChoiceBox() {
+        class PictureChangedListener implements ChangeListener<Number> {
 
-        Group root = new Group();
-
-        //底板
-        Rectangle rectangle = new Rectangle(DefaultContext.RECTSIZE, DefaultContext.RECTSIZE);
-        drawBackground(rectangle);
-        root.getChildren().add(rectangle);
-
-
-        //字符串
-        HBox strings = new HBox();
-        strings.setPadding(new Insets(5, 5, 0, 5));
-        strings.setSpacing(10);
-        typeString = new Label();
-        markString = new TextField();
-        Button saveMark = new Button();
-        saveMark.setText(DefaultContext.SAVE);
-        saveMark.setOnAction(e -> {
-            rect.setMark(markString.getText());
-            String str = rect.getId() + " " + rect.getRectPicture() + " " + rect.getX0()
-                    + " " + rect.getX1() + " " + rect.getY0() + " " + rect.getY1() + " " + rect.getType() + " " + rect.getMark() + DefaultContext.NEW_LINE;
-            if (!rectangleService.add(DefaultContext.RECTPATH, str)) {
-                log.error(DefaultContext.SAVE_FAILED);
+            /**
+             * @param observable The {@code ObservableValue} which value changed
+             * @param oldValue   The old value
+             * @param newValue  The new value
+             */
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                reset(canvas);
+                picture = pictureService.findByID(newValue.intValue() + 1);
+                Set<TrailEntity> trailEntities = pictureService.getTrails(newValue.intValue() + 1);
+                Set<RectEntity> rectEntities = pictureService.getRects(newValue.intValue() + 1);
+                for (TrailEntity trailEntity : trailEntities) {
+                    JSONArray array = new JSONArray(trailEntity.getPoints());
+                    for (Object o : array) {
+                        JSONObject jsonObject = (JSONObject) o;
+                        double x = jsonObject.getDouble(DefaultContext.X);
+                        double y = jsonObject.getDouble(DefaultContext.Y);
+                        graphicsContext.clearRect(x - 2, y - 2, DefaultContext.PENSIZE, DefaultContext.PENSIZE);
+                    }
+                }
+                for (RectEntity rectEntity : rectEntities) {
+                    graphicsContext.strokeRect(rectEntity.getX0(), rectEntity.getY0(), rectEntity.getX1() - rectEntity.getX0(), rectEntity.getY1() - rectEntity.getY0());
+                }
             }
-        });
+        }
 
-        Label strLabel = new Label(DefaultContext.TYPEANDMARK);
+        PictureChangedListener pictureChangedListener = new PictureChangedListener();
 
-        strings.getChildren().addAll(strLabel, typeString, markString, saveMark);
+        List<String> pictures = new ArrayList<>();
+        List<PictureEntity> pictureEntities = pictureService.findAll();
+        for (PictureEntity pictureEntity : pictureEntities) {
+            pictures.add(pictureEntity.getName());
+        }
+        ChoiceBox<String> choiceBox = new ChoiceBox<>(FXCollections.observableArrayList(pictures));
+        choiceBox.getSelectionModel().selectedIndexProperty().addListener(pictureChangedListener);
+        choiceBox.setTooltip(new Tooltip(DefaultContext.PICTURES));
+        return choiceBox;
+    }
 
-
-        //画板
-        final Canvas canvas = new Canvas(DefaultContext.CANVASSIZE, DefaultContext.CANVASSIZE);
-        canvas.setTranslateX((DefaultContext.RECTSIZE - DefaultContext.CANVASSIZE) / 2);
-        canvas.setTranslateY((DefaultContext.RECTSIZE - DefaultContext.CANVASSIZE) / 2 + 50);
-        reset(canvas);
-
-        //canvas的上下文
-        final GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-        //选项
+    /**
+     * @author:pis
+     * @description: 第一排HBob的初始化
+     * @date: 19:45 2018/9/10
+     */
+    private HBox initTopBox() {
         HBox top = new HBox();
         top.setPadding(new Insets(5, 5, 0, 5));
         top.setSpacing(10);
@@ -242,13 +252,15 @@ public class Starter extends Application {
                     rect.setX1(Math.max(x0, x1));
                     rect.setY0(Math.min(y0, y1));
                     rect.setY1(Math.max(y0, y1));
-
+                    saveMark.setDisable(false);
                     //确定类型
                     type = rectangleService.defineType(rect, pictureService.getTrails(picture.getId()));
                     typeString.setText(type);
+                    markString.setText(DefaultContext.MARK);
                     rect.setType(type);
                     graphicsContext.strokeRect(Math.min(x0, x1), Math.min(y0, y1), Math.abs(x0 - x1), Math.abs(y0 - y1));
                 } else {
+                    saveMark.setDisable(true);
                     typeString.setText(rectState.getType());
                     markString.setText(rectState.getMark());
                 }
@@ -265,35 +277,6 @@ public class Starter extends Application {
             }
         }
 
-        class PictureChangedListener implements ChangeListener<Number> {
-
-            /**
-             * @param observable The {@code ObservableValue} which value changed
-             * @param oldValue   The old value
-             * @param newValue  The new value
-             */
-            @Override
-            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
-                reset(canvas);
-                picture = pictureService.findByID(newValue.intValue() + 1);
-                Set<TrailEntity> trailEntities = pictureService.getTrails(newValue.intValue() + 1);
-                Set<RectEntity> rectEntities = pictureService.getRects(newValue.intValue() + 1);
-                for (TrailEntity trailEntity : trailEntities) {
-                    JSONArray array = new JSONArray(trailEntity.getPoints());
-                    for (Object o : array) {
-                        JSONObject jsonObject = (JSONObject) o;
-                        double x = jsonObject.getDouble(DefaultContext.X);
-                        double y = jsonObject.getDouble(DefaultContext.Y);
-                        graphicsContext.clearRect(x - 2, y - 2, DefaultContext.PENSIZE, DefaultContext.PENSIZE);
-                    }
-                }
-                for (RectEntity rectEntity : rectEntities) {
-                    graphicsContext.strokeRect(rectEntity.getX0(), rectEntity.getY0(), rectEntity.getX1() - rectEntity.getX0(), rectEntity.getY1() - rectEntity.getY0());
-                }
-            }
-        }
-
-        PictureChangedListener pictureChangedListener = new PictureChangedListener();
         SelectMouseDragged selectMouseDragged = new SelectMouseDragged();
         SelectMouseReleased selectMouseReleased = new SelectMouseReleased();
         SelectMousePress selectMousePress = new SelectMousePress();
@@ -301,16 +284,8 @@ public class Starter extends Application {
         DrawMouseDragged drawMouseDragged = new DrawMouseDragged();
         DrawMouseReleased drawMouseReleased = new DrawMouseReleased();
 
-
-        //选择图片
-        List<String> pictures = new ArrayList<>();
-        List<PictureEntity> pictureEntities = pictureService.findAll();
-        for (PictureEntity pictureEntity : pictureEntities) {
-            pictures.add(pictureEntity.getName());
-        }
-        ChoiceBox<String> choiceBox = new ChoiceBox<>(FXCollections.observableArrayList(pictures));
-        choiceBox.getSelectionModel().selectedIndexProperty().addListener(pictureChangedListener);
-        choiceBox.setTooltip(new Tooltip(DefaultContext.PICTURES));
+        //图片选择组件
+        ChoiceBox<String> choiceBox = initChoiceBox();
 
         //绘制
         Button drawButton = new Button(DefaultContext.DRAW);
@@ -337,16 +312,55 @@ public class Starter extends Application {
 
 
         top.getChildren().addAll(choiceBox, drawButton, selectButton);
+        return top;
+    }
 
-        //保存图片
+    /**
+     * @author:pis
+     * @description: 第二排的HBox的初始化
+     * @date: 19:43 2018/9/10
+     */
+    private HBox initMiddleBox() {
+        //字符串
+        HBox strings = new HBox();
+        strings.setPadding(new Insets(5, 5, 0, 5));
+        strings.setSpacing(10);
+        typeString = new Label();
+        markString = new TextField();
+        saveMark = new Button();
+        saveMark.setDisable(true);
+        saveMark.setText(DefaultContext.SAVEMARK);
+        saveMark.setOnAction(e -> {
+            rect.setMark(markString.getText());
+            String str = rect.getId() + " " + rect.getRectPicture() + " " + rect.getX0()
+                    + " " + rect.getX1() + " " + rect.getY0() + " " + rect.getY1() + " " + rect.getType() + " " + rect.getMark() + DefaultContext.NEW_LINE;
+            if (!rectangleService.add(DefaultContext.RECTPATH, str)) {
+                log.error(DefaultContext.SAVE_FAILED);
+            }
+            saveMark.setDisable(true);
+        });
+
+        Label strLabel = new Label(DefaultContext.TYPEANDMARK);
+
+        strings.getChildren().addAll(strLabel, typeString, markString, saveMark);
+
+        return strings;
+    }
+
+    /**
+     * @author:pis
+     * @description: 第三排HBox的初始化
+     * @date: 19:48 2018/9/10
+     */
+    private HBox initBottomBox() {
         HBox bottom = new HBox();
         bottom.setPadding(new Insets(5, 5, 0, 5));
         bottom.setSpacing(10);
         Label saveLabel = new Label(DefaultContext.NEWPICTURE);
         TextField textField = new TextField();
         textField.setText(DefaultContext.NAME);
-        Button save = new Button(DefaultContext.NEW);
-        save.setOnAction(e -> {
+        Button newPicture = new Button(DefaultContext.NEWPICTURE);
+        newPicture.setOnAction(e -> {
             reset(canvas);
             picture.setName(textField.getText());
             picture.setId(pictureService.findLastID(DefaultContext.PICTUREPATH) + 1);
@@ -355,21 +369,63 @@ public class Starter extends Application {
                 log.error(DefaultContext.SAVE_FAILED);
             }
         });
-        bottom.getChildren().addAll(saveLabel, textField, save);
+        bottom.getChildren().addAll(saveLabel, textField, newPicture);
+        return bottom;
+    }
+
+
+    /**
+     * @param primaryStage stage to show
+     * @author:pis
+     * @description: 重载application的start方法
+     * @date: 11:59 2018/9/6
+     */
+    @Override
+    public void start(Stage primaryStage) {
+
+        //初始化时新建一个图片对象
+        picture = new PictureEntity();
+        picture.setId(pictureService.findLastID(DefaultContext.PICTUREPATH) + 1);
+
+
+        Group root = new Group();
+
+        //底板
+        Rectangle rectangle = new Rectangle(DefaultContext.RECTSIZE, DefaultContext.RECTSIZE);
+        drawBackground(rectangle);
+        root.getChildren().add(rectangle);
+
+        //第一排Box
+        HBox top = initTopBox();
+        //第二排Box
+        HBox middle = initMiddleBox();
+        //第三排Box
+        HBox bottom = initBottomBox();
+
+
+        canvas = new Canvas(DefaultContext.CANVASSIZE, DefaultContext.CANVASSIZE);
+        canvas.setTranslateX((DefaultContext.RECTSIZE - DefaultContext.CANVASSIZE) / 2);
+        canvas.setTranslateY((DefaultContext.RECTSIZE - DefaultContext.CANVASSIZE) / 2 + 50);
+        reset(canvas);
+
+        //canvas的上下文
+        graphicsContext = canvas.getGraphicsContext2D();
 
 
         //整合
         VBox vBox = new VBox();
         vBox.setPadding(new Insets(5, 5, 0, 5));
         vBox.setSpacing(10);
-        vBox.getChildren().addAll(top, strings, bottom);
-        root.getChildren().add(vBox);
-        root.getChildren().add(canvas);
+        vBox.getChildren().addAll(top, middle, bottom);
+        root.getChildren().addAll(vBox, canvas);
 
+        //scene,css,stage
         Scene scene = new Scene(root, DefaultContext.RECTSIZE, DefaultContext.RECTSIZE);
         scene.getStylesheets().add(this.getClass().getClassLoader().getResource("MistSilverSkin.css").toExternalForm());
         primaryStage.setScene(scene);
+        primaryStage.setTitle(DefaultContext.SKETCHPAD);
         primaryStage.show();
+
         log.info(DefaultContext.SUCCESS);
 
     }
