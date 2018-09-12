@@ -31,4 +31,5 @@ public class PictureEntity {
     public void setName(String name) {
         this.name = name;
     }
+
 }

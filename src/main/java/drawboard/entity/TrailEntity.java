@@ -37,4 +37,6 @@ public class TrailEntity {
     public void setPoints(String points) {
         this.points = points;
     }
+
+
 }

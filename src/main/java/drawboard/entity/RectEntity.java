@@ -92,4 +92,5 @@ public class RectEntity {
     public void setId(Integer id) {
         this.id = id;
     }
+
 }

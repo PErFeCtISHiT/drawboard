@@ -5,10 +5,12 @@ import drawboard.entity.PictureEntity;
 import drawboard.entity.RectEntity;
 import drawboard.entity.TrailEntity;
 import drawboard.service.PictureService;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,15 +43,16 @@ public class PictureServiceImpl extends PubServiceImpl implements PictureService
         try (BufferedReader bufferedReader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             String str = bufferedReader.readLine();
             while (str != null && str.length() > 0) {
+                JSONObject jsonObject = new JSONObject(str);
                 TrailEntity trailEntity = new TrailEntity();
-                trailEntity.setId(Integer.valueOf(str.split(" ")[0]));
-                trailEntity.setPoints(str.split(" ")[2]);
-                trailEntity.setPictureTrail(Integer.valueOf(str.split(" ")[1]));
+                trailEntity.setId(jsonObject.getInt(DefaultContext.ID));
+                trailEntity.setPoints(jsonObject.getString(DefaultContext.POINTS));
+                trailEntity.setPictureTrail(jsonObject.getInt(DefaultContext.PICTURETRAIL));
                 if (id.equals(trailEntity.getPictureTrail()))
                     trailEntities.add(trailEntity);
                 str = bufferedReader.readLine();
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error(DefaultContext.FILE_NOT_FOUND);
         }
         return trailEntities;
@@ -68,13 +71,14 @@ public class PictureServiceImpl extends PubServiceImpl implements PictureService
         try (BufferedReader bufferedReader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             String str = bufferedReader.readLine();
             while (str != null && str.length() > 0) {
+                JSONObject jsonObject = new JSONObject(str);
                 PictureEntity pictureEntity = new PictureEntity();
-                pictureEntity.setId(Integer.valueOf(str.split(" ")[0]));
-                pictureEntity.setName(str.split(" ")[1]);
+                pictureEntity.setId(jsonObject.getInt(DefaultContext.ID));
+                pictureEntity.setName(jsonObject.getString(DefaultContext.NAME));
                 pictureEntities.add(pictureEntity);
                 str = bufferedReader.readLine();
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error(DefaultContext.FILE_NOT_FOUND);
         }
         return pictureEntities;
@@ -94,20 +98,21 @@ public class PictureServiceImpl extends PubServiceImpl implements PictureService
         try (BufferedReader bufferedReader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             String str = bufferedReader.readLine();
             while (str != null && str.length() > 0) {
+                JSONObject jsonObject = new JSONObject(str);
                 RectEntity rectEntity = new RectEntity();
-                rectEntity.setId(Integer.valueOf(str.split(" ")[0]));
-                rectEntity.setRectPicture(Integer.valueOf(str.split(" ")[1]));
-                rectEntity.setX0(Double.valueOf(str.split(" ")[2]));
-                rectEntity.setX1(Double.valueOf(str.split(" ")[3]));
-                rectEntity.setY0(Double.valueOf(str.split(" ")[4]));
-                rectEntity.setY1(Double.valueOf(str.split(" ")[5]));
-                rectEntity.setType(str.split(" ")[6]);
-                rectEntity.setMark(str.split(" ")[7]);
+                rectEntity.setId(jsonObject.getInt(DefaultContext.ID));
+                rectEntity.setRectPicture(jsonObject.getInt(DefaultContext.RECTPICTURE));
+                rectEntity.setX0(jsonObject.getDouble(DefaultContext.X0));
+                rectEntity.setX1(jsonObject.getDouble(DefaultContext.X1));
+                rectEntity.setY0(jsonObject.getDouble(DefaultContext.Y0));
+                rectEntity.setY1(jsonObject.getDouble(DefaultContext.Y1));
+                rectEntity.setType(jsonObject.getString(DefaultContext.TYPE));
+                rectEntity.setMark(jsonObject.getString(DefaultContext.MARK));
                 if (id.equals(rectEntity.getRectPicture()))
                     rectEntities.add(rectEntity);
                 str = bufferedReader.readLine();
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error(DefaultContext.FILE_NOT_FOUND);
         }
         return rectEntities;
@@ -126,15 +131,16 @@ public class PictureServiceImpl extends PubServiceImpl implements PictureService
         try (BufferedReader bufferedReader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             String str = bufferedReader.readLine();
             while (str != null && str.length() > 0) {
+                JSONObject jsonObject = new JSONObject(str);
                 PictureEntity pictureEntity = new PictureEntity();
-                pictureEntity.setId(Integer.valueOf(str.split(" ")[0]));
-                pictureEntity.setName(str.split(" ")[1]);
+                pictureEntity.setId(jsonObject.getInt(DefaultContext.ID));
+                pictureEntity.setName(jsonObject.getString(DefaultContext.NAME));
                 if (pictureEntity.getId().equals(id)) {
                     return pictureEntity;
                 }
                 str = bufferedReader.readLine();
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error(DefaultContext.FILE_NOT_FOUND);
         }
         return null;

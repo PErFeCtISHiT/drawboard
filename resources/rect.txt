@@ -1,6 +1,6 @@
-1 1 18.5 98.0 70.0 136.0 circle circle
-2 1 124.0 219.0 67.5 131.5 triangle triangle
-3 1 30.5 114.0 167.0 241.0 rectangle rectangle
-4 1 147.0 209.0 169.0 254.0 square square
-5 2 37.0 161.0 52.0 151.5 triangle mark
-6 2 98.0 192.0 168.0 243.0 circle circle
+{"rectPicture":1,"y0":33,"y1":93,"x0":21,"x1":91.5,"id":1,"type":"circle","mark":"MARK circle"}
+{"rectPicture":1,"y0":33,"y1":91.5,"x0":126.5,"x1":189,"id":2,"type":"rectangle","mark":"MARK rectangle"}
+{"rectPicture":1,"y0":120,"y1":196,"x0":36,"x1":102,"id":3,"type":"triangle","mark":"triangle"}
+{"rectPicture":1,"y0":120.5,"y1":198.5,"x0":125.5,"x1":213.5,"id":4,"type":"square","mark":"MARK square"}
+{"rectPicture":2,"y0":20.5,"y1":84.5,"x0":7.5,"x1":114.5,"id":5,"type":"rectangle","mark":"MARK A"}
+{"rectPicture":2,"y0":108,"y1":176,"x0":25.5,"x1":119.5,"id":6,"type":"square","mark":"MARK B"}

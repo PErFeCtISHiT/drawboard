@@ -2,13 +2,11 @@ package drawboard.serviceimpl;
 
 import drawboard.context.DefaultContext;
 import drawboard.service.PubService;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,7 +36,7 @@ public class PubServiceImpl implements PubService {
              BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)){
             bufferedWriter.write(data);
             return true;
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error(DefaultContext.FILE_NOT_FOUND);
             return false;
         }
@@ -56,13 +54,14 @@ public class PubServiceImpl implements PubService {
         Path path1 = Paths.get(path);
         try (BufferedReader bufferedReader = Files.newBufferedReader(path1, StandardCharsets.UTF_8)) {
             String str = bufferedReader.readLine();
-            Integer ret = 0;
+            int ret = 0;
             while (str != null && str.length() > 0) {
-                ret = Integer.valueOf(str.split(" ")[0]);
+                JSONObject jsonObject = new JSONObject(str);
+                ret = jsonObject.getInt(DefaultContext.ID);
                 str = bufferedReader.readLine();
             }
             return ret;
-        } catch (Exception e) {
+        } catch (IOException e) {
             log.error(DefaultContext.FILE_NOT_FOUND);
             return -1;
         }

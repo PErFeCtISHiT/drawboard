@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -59,17 +60,17 @@ public class Starter extends Application {
     private PictureEntity picture;
 
     //画框记录点
-    private Double x0;
-    private Double x1;
-    private Double y0;
-    private Double y1;
+    private Double x0 = 0.0;
+    private Double x1 = 0.0;
+    private Double y0 = 0.0;
+    private Double y1 = 0.0;
 
     //选框状态
     private RectEntity rectState;
 
     //画痕
     private TrailEntity trail;
-    private JSONArray jsonArray;
+    private JSONArray trailArray;
 
     //文字显示
     private Label typeString;
@@ -180,11 +181,11 @@ public class Starter extends Application {
                 trail = new TrailEntity();
                 trail.setId(trailService.findLastID(DefaultContext.TRAILPATH) + 1);
                 trail.setPictureTrail(picture.getId());
-                jsonArray = new JSONArray();
+                trailArray = new JSONArray();
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put(DefaultContext.X, event.getX());
                 jsonObject.put(DefaultContext.Y, event.getY());
-                jsonArray.put(jsonObject);
+                trailArray.put(jsonObject);
             }
         }
 
@@ -198,8 +199,8 @@ public class Starter extends Application {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put(DefaultContext.X, event.getX());
                 jsonObject.put(DefaultContext.Y, event.getY());
-                trail.setPoints(jsonArray.toString());
-                String trailStr = trail.getId() + " " + trail.getPictureTrail() + " " + trail.getPoints() + DefaultContext.NEW_LINE;
+                trail.setPoints(trailArray.toString());
+                String trailStr = new JSONObject(trail) + DefaultContext.NEW_LINE;
                 if (!trailService.add(DefaultContext.TRAILPATH, trailStr)) {
                     log.error(DefaultContext.SAVE_FAILED);
                 }
@@ -217,7 +218,7 @@ public class Starter extends Application {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put(DefaultContext.X, event.getX());
                 jsonObject.put(DefaultContext.Y, event.getY());
-                jsonArray.put(jsonObject);
+                trailArray.put(jsonObject);
             }
         }
 
@@ -332,8 +333,7 @@ public class Starter extends Application {
         saveMark.setText(DefaultContext.SAVEMARK);
         saveMark.setOnAction(e -> {
             rect.setMark(markString.getText());
-            String str = rect.getId() + " " + rect.getRectPicture() + " " + rect.getX0()
-                    + " " + rect.getX1() + " " + rect.getY0() + " " + rect.getY1() + " " + rect.getType() + " " + rect.getMark() + DefaultContext.NEW_LINE;
+            String str = new JSONObject(rect) + DefaultContext.NEW_LINE;
             if (!rectangleService.add(DefaultContext.RECTPATH, str)) {
                 log.error(DefaultContext.SAVE_FAILED);
             }
@@ -357,19 +357,19 @@ public class Starter extends Application {
         bottom.setPadding(new Insets(5, 5, 0, 5));
         bottom.setSpacing(10);
         Label saveLabel = new Label(DefaultContext.NEWPICTURE);
-        TextField textField = new TextField();
-        textField.setText(DefaultContext.NAME);
+        TextField pictureName = new TextField();
+        pictureName.setText(DefaultContext.NAME);
         Button newPicture = new Button(DefaultContext.NEWPICTURE);
         newPicture.setOnAction(e -> {
             reset(canvas);
-            picture.setName(textField.getText());
+            picture.setName(pictureName.getText());
             picture.setId(pictureService.findLastID(DefaultContext.PICTUREPATH) + 1);
-            String str = picture.getId() + " " + picture.getName() + DefaultContext.NEW_LINE;
+            String str = new JSONObject(picture) + DefaultContext.NEW_LINE;
             if (!pictureService.add(DefaultContext.PICTUREPATH, str)) {
                 log.error(DefaultContext.SAVE_FAILED);
             }
         });
-        bottom.getChildren().addAll(saveLabel, textField, newPicture);
+        bottom.getChildren().addAll(saveLabel, pictureName, newPicture);
         return bottom;
     }
 
@@ -421,7 +421,7 @@ public class Starter extends Application {
 
         //scene,css,stage
         Scene scene = new Scene(root, DefaultContext.RECTSIZE, DefaultContext.RECTSIZE);
-        scene.getStylesheets().add(this.getClass().getClassLoader().getResource("MistSilverSkin.css").toExternalForm());
+        scene.getStylesheets().add(Objects.requireNonNull(this.getClass().getClassLoader().getResource("MistSilverSkin.css")).toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.setTitle(DefaultContext.SKETCHPAD);
         primaryStage.show();
